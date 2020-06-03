@@ -1,45 +1,32 @@
-import {Application, Router} from 'https://deno.land/x/oak/mod.ts';
+import {Application, Router} from "https://deno.land/x/oak/mod.ts";
+import {v4} from "https://deno.land/std/uuid/mod.ts";
+
+
+const db = new Map<string, any>();
 
 const router = new Router();
 
-router.get('/', ctx => {
-  ctx.response.body = {
-	  message: "Hello from a api running on deno 🦕" 
-  };
-});
-
-router.get('/nums', ctx => {
-	try {
-		throw new Error("trying out error handling");
-	}
-	catch (err) {
-		throw err;
-	}
-});
-
-router.post('/echo', async ctx => {
-  try {
+router.post("/tweet", async ctx => {
     const {value} = await ctx.request.body();
-    ctx.response.body = {body: value};
-  }
-  catch (error) {
-    // error.status = 500;
-    throw error;
-  }
+    value.date = (new Date()).toString();
+    db.set(v4.generate(), value);
+    ctx.response.status = 200;
+    ctx.response.body = {tweet: value};
 });
 
-router.get('/echo/:name/:lastname', ctx => {
-	const {name, lastname} = ctx.params;
-	ctx.response.body = {name, lastname};
+router.get("/tweets", async ctx => {
+  const tweets = [...db.values()];
+  ctx.response.status = 200;
+  ctx.response.body = {tweets};
 });
 
 const app = new Application();
 
 app.use(async (ctx, next) => {
   try {
-	  await next();
+    await next();
   }
-  catch (err) {
+  catch(err) {
     ctx.response.status = err.status || 500;
     ctx.response.body = {
       errorMessage: err.message,
