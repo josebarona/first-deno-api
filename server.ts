@@ -6,9 +6,14 @@ const db = new Map<string, any>();
 
 const router = new Router();
 
+const checkTweet = (obj: any) => {
+  if (!obj.name || !obj.msg || !obj.date) throw new Error("type not as expected");
+};
+
 router.post("/tweet", async ctx => {
     const {value} = await ctx.request.body();
     value.date = (new Date()).toString();
+    checkTweet(value);
     db.set(v4.generate(), value);
     ctx.response.status = 200;
     ctx.response.body = {tweet: value};
